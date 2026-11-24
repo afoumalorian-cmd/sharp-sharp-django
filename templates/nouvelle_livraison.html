@@ -1,0 +1,227 @@
+<!doctype html>
+<html lang="fr">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>{% if confirmation %}Commande reçue{% else %}Nouvelle livraison{% endif %} · Sharp Sharp</title>
+
+  <style>
+    :root {
+      color-scheme: dark;
+      --background: #0b0b0b;
+      --surface: #151515;
+      --text: #f7f7f7;
+      --muted: #b9b9b9;
+      --border: #444;
+      --yellow: #ffd400;
+      --error: #ffaaaa;
+    }
+
+    * { box-sizing: border-box; }
+
+    body {
+      margin: 0;
+      background: var(--background);
+      color: var(--text);
+      font: 1rem/1.5 system-ui, sans-serif;
+    }
+
+    .wrap {
+      width: min(100% - 2rem, 44rem);
+      margin-inline: auto;
+    }
+
+    header { border-bottom: 1px solid #333; }
+
+    .brand {
+      display: flex;
+      align-items: center;
+      gap: .75rem;
+      padding-block: 1rem;
+      font-weight: 900;
+      letter-spacing: .04em;
+    }
+
+    .mark {
+      display: grid;
+      width: 2.5rem;
+      aspect-ratio: 1;
+      place-items: center;
+      background: var(--yellow);
+      color: var(--background);
+      font-size: 1.4rem;
+    }
+
+    main { padding-block: clamp(2rem, 7vw, 4rem); }
+    .city { margin: 0; color: var(--yellow); font-weight: 700; }
+
+    h1 {
+      margin: .4rem 0 1.5rem;
+      font-size: clamp(2rem, 7vw, 3.7rem);
+      line-height: 1.05;
+      letter-spacing: -.04em;
+      text-transform: uppercase;
+    }
+
+    fieldset { min-inline-size: 0; margin: 0; padding: 0; border: 0; }
+    legend { margin-bottom: .75rem; font-weight: 700; }
+
+    .options {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(min(100%, 11rem), 1fr));
+      gap: .75rem;
+    }
+
+    .option {
+      display: flex;
+      align-items: flex-start;
+      gap: .75rem;
+      padding: 1rem;
+      border: 1px solid var(--border);
+      border-radius: .5rem;
+      background: var(--surface);
+      cursor: pointer;
+    }
+
+    .option:has(input:checked) {
+      border-color: var(--yellow);
+      background: #201d0d;
+    }
+
+    .option:has(input:focus-visible),
+    .field > input:focus-visible,
+    .action:focus-visible {
+      outline: 2px solid white;
+      outline-offset: 3px;
+    }
+
+    input[type="radio"] { margin: .3rem 0 0; accent-color: var(--yellow); }
+    .price { display: block; color: var(--muted); }
+
+    .details {
+      display: grid;
+      gap: 1rem;
+      margin-top: 1.5rem;
+    }
+
+    .field > label {
+      display: block;
+      margin-bottom: .35rem;
+      font-weight: 700;
+    }
+
+    .field > input {
+      width: 100%;
+      padding: .85rem 1rem;
+      border: 1px solid var(--border);
+      border-radius: .5rem;
+      background: var(--surface);
+      color: inherit;
+      font: inherit;
+    }
+
+    .note { color: var(--muted); font-size: .875rem; }
+    .errorlist { color: var(--error); }
+
+    .action {
+      display: inline-block;
+      padding: .85rem 1.25rem;
+      border: 0;
+      border-radius: .5rem;
+      background: var(--yellow);
+      color: var(--background);
+      font: inherit;
+      font-weight: 800;
+      text-align: center;
+      text-decoration: none;
+      cursor: pointer;
+    }
+
+    .receipt {
+      margin-bottom: 1rem;
+      padding: 1rem 1.25rem;
+      border: 1px solid var(--border);
+      border-radius: .5rem;
+      background: var(--surface);
+    }
+
+    .receipt p { margin: .35rem 0; }
+    .reference { overflow-wrap: anywhere; }
+
+    @media (max-width: 36rem) {
+      .action { width: 100%; }
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <div class="wrap brand">
+      <span class="mark" aria-hidden="true">ϟ</span>
+      <span>SHARP SHARP</span>
+    </div>
+  </header>
+
+  <main class="wrap">
+    <p class="city">Brazzaville</p>
+
+    {% if confirmation %}
+      <h1>Commande reçue</h1>
+
+      <div class="receipt">
+        <p>{{ confirmation.service }} · <strong>{{ confirmation.prix_fcfa }} FCFA</strong></p>
+        <p class="reference">Référence de commande <strong>{{ confirmation.reference }}</strong></p>
+      </div>
+
+      <a class="action" href="{% url 'nouvelle_livraison' %}">Nouvelle livraison</a>
+    {% else %}
+      <h1>Nouvelle livraison</h1>
+
+      <form method="post" action="{% url 'nouvelle_livraison' %}">
+        {% csrf_token %}
+        {{ form.non_field_errors }}
+
+        <fieldset{% if form.service.errors %} aria-describedby="service-errors"{% endif %}>
+          <legend>Que souhaitez-vous envoyer ?</legend>
+
+          {% if form.service.errors %}
+            <div id="service-errors">{{ form.service.errors }}</div>
+          {% endif %}
+
+          <div class="options">
+            {% for valeur, libelle, prix in services %}
+              <label class="option">
+                <input
+                  type="radio"
+                  name="service"
+                  value="{{ valeur }}"
+                  required
+                  {% if form.service.value == valeur %}checked{% endif %}
+                >
+                <span>
+                  <strong>{{ libelle }}</strong>
+                  <span class="price">{{ prix }} FCFA</span>
+                </span>
+              </label>
+            {% endfor %}
+          </div>
+        </fieldset>
+
+        <div class="details">
+          {% for field in form %}
+            {% if field.name != "service" %}
+              <div class="field">
+                {{ field.label_tag }}
+                {{ field }}
+                {{ field.errors }}
+              </div>
+            {% endif %}
+          {% endfor %}
+        </div>
+
+        <p class="note">Tarifs de démonstration.</p>
+        <button class="action" type="submit">Confirmer la livraison</button>
+      </form>
+    {% endif %}
+  </main>
+</body>
+</html>

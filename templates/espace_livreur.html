@@ -1,0 +1,237 @@
+<!doctype html>
+<html lang="fr">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Espace livreur · Sharp Sharp</title>
+  <style>
+    :root {
+      color-scheme: dark;
+      --background: #0b0b0b;
+      --surface: #151515;
+      --border: #444;
+      --text: #f7f7f7;
+      --muted: #b9b9b9;
+      --yellow: #ffd400;
+      --error: #ffaaaa;
+    }
+
+    * { box-sizing: border-box; }
+
+    body {
+      margin: 0;
+      background: var(--background);
+      color: var(--text);
+      font: 1rem/1.5 system-ui, sans-serif;
+    }
+
+    .wrap {
+      width: min(100% - 2rem, 44rem);
+      margin-inline: auto;
+    }
+
+    header { border-bottom: 1px solid var(--border); }
+
+    .topbar {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      flex-wrap: wrap;
+      gap: .75rem;
+      padding-block: .85rem;
+    }
+
+    .brand { font-weight: 900; letter-spacing: .05em; }
+    main { padding-block: clamp(1.5rem, 6vw, 3.5rem); }
+    h1 { margin: 0 0 1.25rem; font-size: clamp(2rem, 7vw, 3.25rem); }
+    h2 { margin: 0 0 .5rem; font-size: 1.2rem; overflow-wrap: anywhere; }
+    p { margin: .5rem 0; }
+
+    .status { color: var(--yellow); font-weight: 800; }
+    .muted { color: var(--muted); }
+    .reference { overflow-wrap: anywhere; }
+    .errorlist, .warning { color: var(--error); }
+
+    .notifications {
+      display: grid;
+      gap: .5rem;
+      margin-bottom: 1rem;
+    }
+
+    .notification {
+      margin: 0;
+      padding: .85rem 1rem;
+      border: 1px solid var(--border);
+      border-radius: .5rem;
+      background: var(--surface);
+    }
+
+    .notification-error {
+      border-color: #ff7777;
+      background: #351717;
+      color: #ffd8d8;
+    }
+
+    .notification-warning {
+      border-color: var(--yellow);
+      background: #292204;
+      color: #fff0b5;
+    }
+
+    .card {
+      margin-bottom: 1rem;
+      padding: 1rem;
+      border: 1px solid var(--border);
+      border-radius: .5rem;
+      background: var(--surface);
+    }
+
+    label {
+      display: block;
+      margin: .75rem 0 .25rem;
+      font-weight: 700;
+    }
+
+    input:not([type="hidden"]), button {
+      min-height: 44px;
+      padding: .65rem .85rem;
+      border: 1px solid var(--border);
+      border-radius: .4rem;
+      font: inherit;
+    }
+
+    input:not([type="hidden"]) {
+      width: 100%;
+      background: var(--background);
+      color: inherit;
+    }
+
+    button {
+      background: var(--yellow);
+      color: var(--background);
+      border-color: var(--yellow);
+      font-weight: 800;
+      cursor: pointer;
+    }
+
+    .card button { width: 100%; margin-top: 1rem; }
+
+    .secondary {
+      background: transparent;
+      color: var(--text);
+      border-color: var(--border);
+    }
+
+    :focus-visible { outline: 2px solid white; outline-offset: 3px; }
+  </style>
+</head>
+<body>
+  <header>
+    <div class="wrap topbar">
+      <span class="brand">SHARP SHARP</span>
+
+      {% if user.is_authenticated and not page_connexion %}
+        <form method="post" action="{% url 'deconnexion_livreur' %}">
+          {% csrf_token %}
+          <button class="secondary" type="submit">Se déconnecter</button>
+        </form>
+      {% endif %}
+    </div>
+  </header>
+
+  <main class="wrap">
+    {% if page_connexion %}
+      <h1>Connexion livreur</h1>
+
+      <form class="card" method="post" action="{% url 'connexion_livreur' %}">
+        {% csrf_token %}
+        {{ form.non_field_errors }}
+
+        <label for="{{ form.username.id_for_label }}">Identifiant</label>
+        {{ form.username }}
+        {{ form.username.errors }}
+
+        <label for="{{ form.password.id_for_label }}">Mot de passe</label>
+        {{ form.password }}
+        {{ form.password.errors }}
+
+        {% if next %}
+          <input type="hidden" name="next" value="{{ next }}">
+        {% endif %}
+
+        <button type="submit">Se connecter</button>
+      </form>
+    {% else %}
+      <h1>Mes courses</h1>
+
+      {% if messages %}
+        <div class="notifications">
+          {% for message in messages %}
+            {% if message.level == DEFAULT_MESSAGE_LEVELS.ERROR %}
+              <p class="notification notification-error" role="alert">
+                <strong>Erreur</strong> · {{ message }}
+              </p>
+            {% elif message.level == DEFAULT_MESSAGE_LEVELS.WARNING %}
+              <p class="notification notification-warning" role="status">
+                <strong>Attention</strong> · {{ message }}
+              </p>
+            {% else %}
+              <p class="notification" role="status">{{ message }}</p>
+            {% endif %}
+          {% endfor %}
+        </div>
+      {% endif %}
+
+      {% for course in courses %}
+        {% with livraison=course.livraison %}
+          <article class="card">
+            <h2>{{ livraison.depart }} → {{ livraison.arrivee }}</h2>
+            <p class="status">{{ livraison.get_statut_display }}</p>
+            <p>{{ livraison.get_service_display }}</p>
+
+            {% if course.action %}
+              <p>Téléphone du destinataire <strong>{{ livraison.telephone }}</strong></p>
+            {% endif %}
+
+            <p class="muted reference">Référence {{ livraison.reference }}</p>
+
+            {% if course.remise_bloquee %}
+              <p class="warning">
+                Validation bloquée après cinq codes incorrects.
+                Contacte l’équipe Sharp Sharp.
+              </p>
+            {% elif course.action %}
+              <form method="post" action="{% url 'avancer_course' livraison.reference %}">
+                {% csrf_token %}
+                <input type="hidden" name="statut_attendu" value="{{ livraison.statut }}">
+
+                {% if course.remise %}
+                  <label for="code-{{ livraison.reference }}">Code de remise</label>
+                  <input
+                    id="code-{{ livraison.reference }}"
+                    name="code_remise"
+                    type="text"
+                    inputmode="numeric"
+                    pattern="[0-9]{6}"
+                    maxlength="6"
+                    autocomplete="off"
+                    aria-describedby="aide-code-{{ livraison.reference }}"
+                    required
+                  >
+                  <p class="muted" id="aide-code-{{ livraison.reference }}">
+                    Saisis les six chiffres communiqués par le destinataire.
+                  </p>
+                {% endif %}
+
+                <button type="submit">{{ course.action.1 }}</button>
+              </form>
+            {% endif %}
+          </article>
+        {% endwith %}
+      {% empty %}
+        <p class="card">Aucune course ne t’est affectée pour le moment.</p>
+      {% endfor %}
+    {% endif %}
+  </main>
+</body>
+</html>

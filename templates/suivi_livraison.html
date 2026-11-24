@@ -1,0 +1,153 @@
+<!doctype html>
+<html lang="fr">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Suivi de livraison · Sharp Sharp</title>
+  <style>
+    :root {
+      color-scheme: dark;
+      --background: #0b0b0b;
+      --surface: #151515;
+      --text: #f7f7f7;
+      --muted: #b9b9b9;
+      --border: #444;
+      --yellow: #ffd400;
+    }
+
+    * { box-sizing: border-box; }
+
+    body {
+      margin: 0;
+      background: var(--background);
+      color: var(--text);
+      font: 1rem/1.5 system-ui, sans-serif;
+    }
+
+    .wrap {
+      width: min(100% - 2rem, 44rem);
+      margin-inline: auto;
+    }
+
+    header { border-bottom: 1px solid #333; }
+
+    .brand {
+      display: flex;
+      align-items: center;
+      gap: .75rem;
+      padding-block: 1rem;
+      font-weight: 900;
+      letter-spacing: .04em;
+    }
+
+    .mark {
+      display: grid;
+      width: 2.5rem;
+      aspect-ratio: 1;
+      place-items: center;
+      background: var(--yellow);
+      color: var(--background);
+      font-size: 1.4rem;
+    }
+
+    main { padding-block: clamp(2rem, 7vw, 4rem); }
+    .city { margin: 0; color: var(--yellow); font-weight: 700; }
+
+    h1 {
+      margin: .4rem 0 1.5rem;
+      font-size: clamp(2rem, 7vw, 3.7rem);
+      line-height: 1.05;
+      letter-spacing: -.04em;
+      text-transform: uppercase;
+    }
+
+    .receipt {
+      padding: 1.25rem;
+      border: 1px solid var(--border);
+      border-radius: .5rem;
+      background: var(--surface);
+    }
+
+    .status-label { margin: 0; color: var(--muted); }
+    .status { margin: .25rem 0 1rem; color: var(--yellow); font-size: 1.5rem; }
+    dl { margin: 0; }
+    dl > div + div { margin-top: .75rem; }
+    dt { color: var(--muted); font-size: .875rem; }
+    dd { margin: .125rem 0 0; overflow-wrap: anywhere; }
+
+    .actions {
+      display: flex;
+      flex-wrap: wrap;
+      gap: .75rem;
+      margin-top: 1rem;
+    }
+
+    .action {
+      padding: .75rem 1rem;
+      border: 1px solid var(--yellow);
+      border-radius: .5rem;
+      background: var(--yellow);
+      color: var(--background);
+      font-weight: 750;
+      text-align: center;
+      text-decoration: none;
+    }
+
+    .secondary { background: transparent; color: var(--text); border-color: var(--border); }
+    .action:focus-visible { outline: 2px solid white; outline-offset: 3px; }
+
+    @media (max-width: 36rem) {
+      .action { width: 100%; }
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <div class="wrap brand">
+      <span class="mark" aria-hidden="true">ϟ</span>
+      <span>SHARP SHARP</span>
+    </div>
+  </header>
+
+  <main class="wrap">
+    <p class="city">Brazzaville</p>
+    <h1>Suivi de livraison</h1>
+
+    <section class="receipt" aria-labelledby="statut-actuel">
+      <p class="status-label">Statut actuel</p>
+      <h2 class="status" id="statut-actuel">{{ livraison.get_statut_display }}</h2>
+
+      <dl>
+        <div>
+          <dt>Service</dt>
+          <dd>{{ livraison.get_service_display }}</dd>
+        </div>
+        <div>
+          <dt>Trajet</dt>
+          <dd>{{ livraison.depart }} → {{ livraison.arrivee }}</dd>
+        </div>
+        <div>
+          <dt>Prix de la livraison</dt>
+          <dd><strong>{{ prix_fcfa }} FCFA</strong></dd>
+        </div>
+        <div>
+          <dt>Référence de commande</dt>
+          <dd>{{ livraison.reference }}</dd>
+        </div>
+      </dl>
+      {% if code_remise %}
+        <div>
+          <h3>Code de remise</h3>
+          <p><strong>{{ code_remise }}</strong></p>
+          <p>Transmets ce code au destinataire. Il le donnera au livreur à la réception du colis.</p>
+        </div>
+      {% endif %}
+    </section>
+
+    <div class="actions">
+      <a class="action" href="{% url 'confirmation_livraison' %}">Actualiser le suivi</a>
+      <a class="action secondary" href="{% url 'nouvelle_livraison' %}">Nouvelle livraison</a>
+    </div>
+  </main>
+</body>
+</html>
