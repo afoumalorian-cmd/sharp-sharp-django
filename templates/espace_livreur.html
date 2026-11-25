@@ -4,6 +4,7 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>Espace livreur · Sharp Sharp</title>
+
   <style>
     :root {
       color-scheme: dark;
@@ -16,7 +17,9 @@
       --error: #ffaaaa;
     }
 
-    * { box-sizing: border-box; }
+    * {
+      box-sizing: border-box;
+    }
 
     body {
       margin: 0;
@@ -30,7 +33,9 @@
       margin-inline: auto;
     }
 
-    header { border-bottom: 1px solid var(--border); }
+    header {
+      border-bottom: 1px solid var(--border);
+    }
 
     .topbar {
       display: flex;
@@ -41,16 +46,49 @@
       padding-block: .85rem;
     }
 
-    .brand { font-weight: 900; letter-spacing: .05em; }
-    main { padding-block: clamp(1.5rem, 6vw, 3.5rem); }
-    h1 { margin: 0 0 1.25rem; font-size: clamp(2rem, 7vw, 3.25rem); }
-    h2 { margin: 0 0 .5rem; font-size: 1.2rem; overflow-wrap: anywhere; }
-    p { margin: .5rem 0; }
+    .brand {
+      font-weight: 900;
+      letter-spacing: .05em;
+    }
 
-    .status { color: var(--yellow); font-weight: 800; }
-    .muted { color: var(--muted); }
-    .reference { overflow-wrap: anywhere; }
-    .errorlist, .warning { color: var(--error); }
+    main {
+      padding-block: clamp(1.5rem, 6vw, 3.5rem);
+    }
+
+    h1 {
+      margin: 0 0 1.25rem;
+      font-size: clamp(2rem, 7vw, 3.25rem);
+    }
+
+    h2 {
+      margin: 0 0 .5rem;
+      font-size: 1.2rem;
+      overflow-wrap: anywhere;
+    }
+
+    p {
+      margin: .5rem 0;
+    }
+
+    .status {
+      color: var(--yellow);
+      font-weight: 800;
+    }
+
+    .muted {
+      color: var(--muted);
+    }
+
+    .reference {
+      overflow-wrap: anywhere;
+    }
+
+    .errorlist,
+    .warning {
+      color: var(--error);
+    }
+
+    /* Notifications et messages de validation */
 
     .notifications {
       display: grid;
@@ -78,6 +116,14 @@
       color: #fff0b5;
     }
 
+    .notification-success {
+      border-color: #39865b;
+      background: #142a1d;
+      color: #a5e8bd;
+    }
+
+    /* Cartes des livraisons */
+
     .card {
       margin-bottom: 1rem;
       padding: 1rem;
@@ -86,13 +132,17 @@
       background: var(--surface);
     }
 
+    /* Champs et boutons */
+
     label {
       display: block;
       margin: .75rem 0 .25rem;
       font-weight: 700;
     }
 
-    input:not([type="hidden"]), button {
+    input:not([type="hidden"]),
+    select,
+    button {
       min-height: 44px;
       padding: .65rem .85rem;
       border: 1px solid var(--border);
@@ -100,7 +150,8 @@
       font: inherit;
     }
 
-    input:not([type="hidden"]) {
+    input:not([type="hidden"]),
+    select {
       width: 100%;
       background: var(--background);
       color: inherit;
@@ -114,7 +165,10 @@
       cursor: pointer;
     }
 
-    .card button { width: 100%; margin-top: 1rem; }
+    .card button {
+      width: 100%;
+      margin-top: 1rem;
+    }
 
     .secondary {
       background: transparent;
@@ -122,10 +176,48 @@
       border-color: var(--border);
     }
 
-    :focus-visible { outline: 2px solid white; outline-offset: 3px; }
+    /* Gestion des incidents */
+
+    .incident-form {
+      margin-top: 1.25rem;
+      padding-top: 1rem;
+      border-top: 1px solid var(--border);
+    }
+
+    .incident-button {
+      background: transparent;
+      color: var(--error);
+      border-color: #c65a5a;
+    }
+
+    .incident-button:hover {
+      background: #351717;
+    }
+
+    .incident-notice {
+      margin-top: 1rem;
+      padding: 1rem;
+      border: 1px solid #c65a5a;
+      border-radius: .5rem;
+      background: #351717;
+      color: #ffd8d8;
+    }
+
+    .incident-notice p {
+      margin: .35rem 0;
+    }
+
+    :focus-visible {
+      outline: 2px solid white;
+      outline-offset: 3px;
+    }
   </style>
 </head>
+
 <body>
+
+  <!-- En-tête de l'espace livreur -->
+
   <header>
     <div class="wrap topbar">
       <span class="brand">SHARP SHARP</span>
@@ -133,25 +225,42 @@
       {% if user.is_authenticated and not page_connexion %}
         <form method="post" action="{% url 'deconnexion_livreur' %}">
           {% csrf_token %}
-          <button class="secondary" type="submit">Se déconnecter</button>
+          <button class="secondary" type="submit">
+            Se déconnecter
+          </button>
         </form>
       {% endif %}
     </div>
   </header>
 
   <main class="wrap">
+
     {% if page_connexion %}
+
+      <!-- Formulaire de connexion -->
+
       <h1>Connexion livreur</h1>
 
-      <form class="card" method="post" action="{% url 'connexion_livreur' %}">
+      <form
+        class="card"
+        method="post"
+        action="{% url 'connexion_livreur' %}"
+      >
         {% csrf_token %}
+
         {{ form.non_field_errors }}
 
-        <label for="{{ form.username.id_for_label }}">Identifiant</label>
+        <label for="{{ form.username.id_for_label }}">
+          Identifiant
+        </label>
+
         {{ form.username }}
         {{ form.username.errors }}
 
-        <label for="{{ form.password.id_for_label }}">Mot de passe</label>
+        <label for="{{ form.password.id_for_label }}">
+          Mot de passe
+        </label>
+
         {{ form.password }}
         {{ form.password.errors }}
 
@@ -161,52 +270,114 @@
 
         <button type="submit">Se connecter</button>
       </form>
+
     {% else %}
+
       <h1>Mes courses</h1>
+
+      <!-- Notifications Django -->
 
       {% if messages %}
         <div class="notifications">
+
           {% for message in messages %}
+
             {% if message.level == DEFAULT_MESSAGE_LEVELS.ERROR %}
+
               <p class="notification notification-error" role="alert">
                 <strong>Erreur</strong> · {{ message }}
               </p>
+
             {% elif message.level == DEFAULT_MESSAGE_LEVELS.WARNING %}
+
               <p class="notification notification-warning" role="status">
                 <strong>Attention</strong> · {{ message }}
               </p>
+
+            {% elif message.level == DEFAULT_MESSAGE_LEVELS.SUCCESS %}
+
+              <p class="notification notification-success" role="status">
+                <strong>Succès</strong> · {{ message }}
+              </p>
+
             {% else %}
-              <p class="notification" role="status">{{ message }}</p>
+
+              <p class="notification" role="status">
+                {{ message }}
+              </p>
+
             {% endif %}
+
           {% endfor %}
+
         </div>
       {% endif %}
 
+      <!-- Liste des courses affectées au livreur -->
+
       {% for course in courses %}
         {% with livraison=course.livraison %}
+
           <article class="card">
-            <h2>{{ livraison.depart }} → {{ livraison.arrivee }}</h2>
-            <p class="status">{{ livraison.get_statut_display }}</p>
+
+            <h2>
+              {{ livraison.depart }} → {{ livraison.arrivee }}
+            </h2>
+
+            <p class="status">
+              {{ livraison.get_statut_display }}
+            </p>
+
             <p>{{ livraison.get_service_display }}</p>
 
-            {% if course.action %}
-              <p>Téléphone du destinataire <strong>{{ livraison.telephone }}</strong></p>
+            {% if course.action and livraison.statut != "retour" %}
+              <p>
+                Téléphone du destinataire
+                <strong>{{ livraison.telephone }}</strong>
+              </p>
             {% endif %}
 
-            <p class="muted reference">Référence {{ livraison.reference }}</p>
+            <p class="muted reference">
+              Référence {{ livraison.reference }}
+            </p>
+
+            <!-- Blocage après cinq codes incorrects -->
 
             {% if course.remise_bloquee %}
-              <p class="warning">
-                Validation bloquée après cinq codes incorrects.
-                Contacte l’équipe Sharp Sharp.
-              </p>
+
+              <div class="incident-notice" role="status">
+                <strong>Validation bloquée</strong>
+
+                <p>
+                  Cinq codes incorrects ont été saisis.
+                  Contacte l’équipe Sharp Sharp.
+                </p>
+              </div>
+
             {% elif course.action %}
-              <form method="post" action="{% url 'avancer_course' livraison.reference %}">
+
+              <!-- Formulaire de progression de la livraison -->
+
+              <form
+                method="post"
+                action="{% url 'avancer_course' livraison.reference %}"
+              >
                 {% csrf_token %}
-                <input type="hidden" name="statut_attendu" value="{{ livraison.statut }}">
+
+                <input
+                  type="hidden"
+                  name="statut_attendu"
+                  value="{{ livraison.statut }}"
+                >
 
                 {% if course.remise %}
-                  <label for="code-{{ livraison.reference }}">Code de remise</label>
+
+                  <!-- Vérification du code de remise -->
+
+                  <label for="code-{{ livraison.reference }}">
+                    Code de remise
+                  </label>
+
                   <input
                     id="code-{{ livraison.reference }}"
                     name="code_remise"
@@ -218,20 +389,92 @@
                     aria-describedby="aide-code-{{ livraison.reference }}"
                     required
                   >
-                  <p class="muted" id="aide-code-{{ livraison.reference }}">
+
+                  <p
+                    class="muted"
+                    id="aide-code-{{ livraison.reference }}"
+                  >
                     Saisis les six chiffres communiqués par le destinataire.
                   </p>
+
                 {% endif %}
 
-                <button type="submit">{{ course.action.1 }}</button>
+                <button type="submit">
+                  {{ course.action.1 }}
+                </button>
+
               </form>
+
             {% endif %}
+
+            <!-- Affichage d'un incident en attente de traitement -->
+
+            {% if course.statut_incident %}
+
+              <div class="incident-notice" role="status">
+                <strong>Incident signalé</strong>
+
+                <p>
+                  Motif : {{ livraison.get_motif_incident_display }}
+                </p>
+
+                <p>
+                  En attente d’une décision de l’équipe Sharp Sharp.
+                </p>
+              </div>
+
+            {% elif course.remise %}
+
+              <!-- Formulaire de signalement d'un incident -->
+
+              <form
+                class="incident-form"
+                method="post"
+                action="{% url 'signaler_incident' livraison.reference %}"
+              >
+                {% csrf_token %}
+
+                <label for="motif-{{ livraison.reference }}">
+                  Motif de l’incident
+                </label>
+
+                <select
+                  id="motif-{{ livraison.reference }}"
+                  name="motif"
+                  required
+                >
+                  <option value="">Choisir un motif</option>
+
+                  {% for valeur, libelle in motifs_incident %}
+                    <option value="{{ valeur }}">
+                      {{ libelle }}
+                    </option>
+                  {% endfor %}
+
+                </select>
+
+                <button class="incident-button" type="submit">
+                  Signaler un incident
+                </button>
+
+              </form>
+
+            {% endif %}
+
           </article>
+
         {% endwith %}
+
       {% empty %}
-        <p class="card">Aucune course ne t’est affectée pour le moment.</p>
+
+        <p class="card">
+          Aucune course ne t’est affectée pour le moment.
+        </p>
+
       {% endfor %}
+
     {% endif %}
+
   </main>
 </body>
 </html>
