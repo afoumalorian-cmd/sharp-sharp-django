@@ -35,6 +35,14 @@ class Livraison(models.Model):
         RECUPEREE = "recuperee", "Colis récupéré"
         EN_LIVRAISON = "en_livraison", "En livraison"
         LIVREE = "livree", "Livrée"
+        INCIDENT = "incident", "Incident signalé"
+        RETOUR = "retour", "Retour à effectuer"
+        RETOURNEE = "retournee", "Retournée"
+
+    class MotifIncident(models.TextChoices):
+        ABSENT = "destinataire_absent", "Destinataire absent"
+        ADRESSE = "adresse_introuvable", "Adresse introuvable"
+        CODE_INCORRECT = "code_incorrect", "Code de livraison incorrect"
 
     reference = models.UUIDField(default=uuid.uuid4, unique=True, editable=False)
     service = models.CharField(max_length=12, choices=Service.choices)
@@ -63,6 +71,18 @@ class Livraison(models.Model):
     editable=False,
     )
 
+    motif_incident = models.CharField(
+        max_length=50,
+        choices=MotifIncident.choices,
+        blank=True,
+        editable=False,
+    )
+    incident_signale_le = models.DateTimeField(
+        null=True,
+        blank=True,
+        editable=False,
+    )
+
     # Une commande peut être enregistrée avant qu’un livreur soit disponible.
     # PROTECT conserve le lien avec le livreur dans les commandes existantes.
     livreur = models.ForeignKey(
@@ -82,6 +102,16 @@ class Livraison(models.Model):
 
     def clean(self):
         super().clean()
+
+        statuts_avec_incident = {
+            self.Statut.INCIDENT,
+            self.Statut.RETOUR,
+            self.Statut.RETOURNEE,
+        }
+        if self.statut in statuts_avec_incident and not self.motif_incident:
+            raise ValidationError({
+                "statut": "Cette course doit d’abord faire l’objet d’un signalement."
+            })
 
         # L’administration appelle cette validation avant l’enregistrement.
         if self.statut == self.Statut.RECUE and self.livreur_id:

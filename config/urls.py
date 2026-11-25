@@ -28,5 +28,10 @@ urlpatterns = [
         views_livreur.avancer_course,
         name="avancer_course",
     ),
+    path(
+        "livreur/course/<uuid:reference>/incident/",
+        views_livreur.signaler_incident,
+        name="signaler_incident",
+    ),
     path("admin/", admin.site.urls),
 ]
